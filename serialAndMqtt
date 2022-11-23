@@ -1,0 +1,103 @@
+//Otetaan tietoa serialilla arduinosta ja lähetetään mqtt:llä eteenpäin
+
+// This #include statement was automatically added by the Particle IDE.
+#include <MQTT.h>
+
+// This #include statement was automatically added by the Particle IDE.
+#include <google-maps-device-locator.h>
+
+#include "Particle.h"
+
+//MQTT brokeri 
+MQTT client("broker.mqttdashboard.com", 1883, callback);
+//google maps locator
+GoogleMapsDeviceLocator locator;
+// Constants
+const size_t READ_BUF_SIZE = 256;
+
+// Structures
+typedef struct {
+	int temperature;
+	int humidity;
+	int pressure;
+	int luminosity;
+	int winddir;
+	int windspeed;
+	int rainfall;
+} WeatherData;
+
+// Forward declarations
+void processBuffer();
+void handleWeatherData(const WeatherData &data);
+
+// Global variables
+int counter = 0;
+unsigned long lastSend = 0;
+
+char readBuf[READ_BUF_SIZE];
+size_t readBufOffset = 0;
+
+void setup() {
+	Serial.begin(9600);
+
+	// Serial1 RX is connected to Arduino TX (1)
+	// Serial2 TX is connected to Arduino RX (0)
+	// Photon GND is connected to Arduino GND
+	Serial1.begin(19200);
+}
+
+// lokaation muodostaminen stringiksi ja lähettäminen
+void locationCallback(float lat, float lon, float accuracy){
+  
+  String locationMessage = "Lat " + String(lat) + " Lon " + String(lon);
+  
+  client.publish("outTopic/message", locationMessage);  }
+
+
+void setup() {
+locator.withSubscribe(locationCallback).withLocatePeriodic(10);
+
+
+void loop() {
+
+	// Read data from serial
+	while(Serial1.available()) {
+		if (readBufOffset < READ_BUF_SIZE) {
+			char c = Serial1.read();
+			if (c != '\n') {
+				// Add character to buffer
+				readBuf[readBufOffset++] = c;
+			}
+			else {
+				// End of line character found, process line
+				readBuf[readBufOffset] = 0;
+				processBuffer();
+				readBufOffset = 0;
+			}
+		}
+		else {
+			Serial.println("readBuf overflow, emptying buffer");
+			readBufOffset = 0;
+		}
+	}
+
+}
+
+void processBuffer() {
+	// Serial.printlnf("Received from Arduino: %s", readBuf);
+	WeatherData data;
+
+	if (sscanf(readBuf, "%d,%d,%d,%d,%d,%d,%d", &data.temperature, &data.humidity, &data.pressure,
+			&data.luminosity, &data.winddir, &data.windspeed, &data.rainfall) == 7) {
+
+		handleWeatherData(data);
+	}
+	else {
+		Serial.printlnf("invalid data %s", readBuf);
+	}
+}
+
+void handleWeatherData(const WeatherData &data) {
+	Serial.printlnf("got temperature=%d humidity=%d pressure=%d luminosity=%d winddir=%d windspeed=%d rainfall=%d",
+			data.temperature, data.humidity, data.pressure, data.luminosity, data.winddir, data.windspeed, data.rainfall);
+}
