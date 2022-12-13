@@ -1,3 +1,5 @@
+//This one does not work/is not tested FYI.
+
 //Otetaan tietoa serialilla arduinosta ja lähetetään mqtt:llä eteenpäin
 
 // This #include statement was automatically added by the Particle IDE.
