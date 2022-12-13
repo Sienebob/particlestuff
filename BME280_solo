@@ -1,3 +1,5 @@
+//Reading BME280 sensor data and printing it in serial.
+
 //käytetään adafruitin kirjastoa koska se toimii grove sensorin kanssa
 #include <Adafruit_BME280.h>
 //määritellään normaali ilmanpaine
