@@ -1,3 +1,5 @@
+//This code transfers yout location information via MQTT server. 
+//It can also recieva a message and play a different color led loop when received a correct message.
 // lisätään google maps kirjasto
 #include <google-maps-device-locator.h>
 
