@@ -1,3 +1,4 @@
+//Code for arduino to send data through MQTT using arduino shield and some sensors.
 #include <GSM.h>
 #include <SPI.h>
 #include <PubSubClient.h>
